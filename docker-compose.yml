@@ -1,0 +1,40 @@
+﻿version: '3.4'
+
+networks:
+  app-network:
+    driver: bridge
+
+services:
+  session_api:
+    image: session_api:latest
+    depends_on:
+      - "postgres_image"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8001:80"
+    environment:
+      DB_CONNECTION_STRING: "Host=localhost:5432;Database=session-bdd;Username=admin;Password=aupGjXqZCMh9vKkQ"
+    networks:
+      - app-network
+  
+  postgres_image:
+    image: postgres:latest
+    ports:
+      - "5432"
+    restart: always
+    volumes:
+      - db_volume:/var/lib/postgresql/data
+      - ./SessionMicroservice/dbscripts/seed.sql :/docker-entrypoint-initdb.d/seed.sql
+    environment:
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "aupGjXqZCMh9vKkQ"
+      POSTGRES_DB: "session-bdd"
+    networks:
+      - app-network
+volumes:
+  db_volume:
+         
+    
+     
