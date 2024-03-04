@@ -16,6 +16,8 @@ services:
       - "8001:80"
     environment:
       DB_CONNECTION_STRING: "Host=localhost:5432;Database=session-bdd;Username=admin;Password=aupGjXqZCMh9vKkQ"
+      USERAPI_URL: "http:localhost:8080/"
+      BOWLINGPARKAPI_URL: "http:localhost:8000/"
     networks:
       - app-network
   

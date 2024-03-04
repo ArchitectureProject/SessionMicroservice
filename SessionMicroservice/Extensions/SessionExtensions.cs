@@ -6,7 +6,7 @@ namespace SessionMicroservice.Extensions;
 public static class SessionExtensions
 {
     public static SessionResponse ToSessionResponse(this Session session, BowlingParkDataFromQrCode data)
-        => new SessionResponse(
+        => new (
             Id: session.Id,
             StartedAt: session.StartedAt,
             ClosedAt: session.ClosedAt,
