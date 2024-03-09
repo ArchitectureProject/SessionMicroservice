@@ -22,7 +22,7 @@ public class SessionController : ControllerBase
     public async Task<SessionResponse> GetSession(string qrCode)
         => await _sessionService.GetOrCreateSession(qrCode);
     
-    [HttpPost("actualisePayment/{sessionId}"), Authorize(Roles = "AGENT")]
+    [HttpPost("actualisePayment/{sessionId}"), Authorize(Roles = "CUSTOMER,AGENT")]
     public PaymentActualisationResponse ActualisePayment(string sessionId, PaymentActualisationRequest model)
         => _sessionService.ActualisePayment(sessionId, model);
     
@@ -31,8 +31,8 @@ public class SessionController : ControllerBase
         => await _sessionService.AttemptPayment(qrCode, model, GetUserId());
 
     [HttpPost("SetAmountManually/{qrCode}"), Authorize(Roles = "AGENT")]
-    public async Task<PaymentResponse> SetAmountManually(string qrCode, PaymentRequest model) 
-        => await _sessionService.AttemptPayment(qrCode, model, GetUserId());
+    public async Task SetAmountManually(string qrCode, PaymentManualRequest model) 
+        => await _sessionService.SetAmountManually(qrCode, model);
     
     [HttpPost("closeSession/{qrCode}"), Authorize(Roles = "AGENT")]
     public async Task<SessionResponse> TryCloseSession(string qrCode)

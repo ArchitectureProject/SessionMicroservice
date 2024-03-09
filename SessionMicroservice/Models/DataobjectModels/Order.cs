@@ -20,6 +20,6 @@ public record OrderResponse(
     bool PaidByCustomer
 );
 
-public record CustomerInfosResponse(string UserId, string Email, string Name, string PhoneNumber);
-public record CustomerInfosRequest(string Email, string Name, string PhoneNumber);
+public record CustomerInfosResponse(string UserId, string Email, string Name, string? PhoneNumber);
+public record CustomerInfosRequest(string Email, string Name, string? PhoneNumber);
 public record ProductCommand(string ProductId, int Quantity);

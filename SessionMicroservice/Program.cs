@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using NetDevPack.Security.JwtExtensions;
+using SessionMicroservice.Controllers.Hubs;
 using SessionMicroservice.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
-var configuration = builder.Configuration;
 
 // cors
 services.AddCors(options =>
@@ -30,7 +30,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Session", Version = "v1" });
-    c.AddSignalRSwaggerGen();
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -54,6 +53,7 @@ builder.Services.AddSwaggerGen(c =>
             Array.Empty<string>()
         }
     });
+    c.AddSignalRSwaggerGen();
 });
 
 // HttpClients
@@ -80,6 +80,8 @@ builder.Services.AddHttpClient("OrderApi", httpClient =>
 }).AddHttpMessageHandler<AuthHandler>();
 
 // Services
+services.AddSignalR();
+services.AddScoped<INotificationService, NotificationService>();
 services.AddScoped<ISessionService, SessionService>();
 services.AddScoped<IBowlingParkApiService, BowlingParkApiService>();
 services.AddScoped<IPaymentApiService, PaymentApiService>();
@@ -91,7 +93,7 @@ services.AddScoped<AuthHandler>();
 services.AddDbContext<DataContext>(options =>
 {
     var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
-                           "Host=localhost:5400;Database=session-bdd;Username=admin;Password=aupGjXqZCMh9vKkQ";
+                           "Host=localhost:5437;Database=session;Username=admin_user;Password=strongPassword";
     options.UseNpgsql(connectionString);
 });
 
@@ -118,5 +120,6 @@ app.UseCors();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<NotificationHub>("/notifications");
 
 app.Run();

@@ -13,6 +13,7 @@ public interface ISessionService
     Task<PaymentResponse> AttemptPayment(string qrCode, PaymentRequest model, string UserId);
     Task<OrderResponse> Order(string qrCode, OrderRequest model);
     Task<SessionResponse> TryCloseSession(string qrCode);
+    Task SetAmountManually(string qrCode, PaymentManualRequest model);
 }
 public class SessionService : ISessionService
 {
@@ -21,17 +22,20 @@ public class SessionService : ISessionService
     private readonly IOrderApiService _orderApiService;
     private readonly DataContext _context;
     private readonly ILogger<SessionService> _logger;
+    private readonly INotificationService _notificationService;
 
     public SessionService(IBowlingParkApiService bowlingParkApiService,
         DataContext context, ILogger<SessionService> logger, 
         IPaymentApiService paymentApiService, 
-        IOrderApiService orderApiService)
+        IOrderApiService orderApiService, 
+        INotificationService notificationService)
     {
         _bowlingParkApiService = bowlingParkApiService;
         _context = context;
         _logger = logger;
         _paymentApiService = paymentApiService;
         _orderApiService = orderApiService;
+        _notificationService = notificationService;
     }
 
     public async Task<SessionResponse> GetOrCreateSession(string qrCode)
@@ -78,6 +82,10 @@ public class SessionService : ISessionService
         
         _context.SaveChanges();
 
+        // Notify
+        _notificationService.SendNotificationToSession(session.LocationQrCode, 
+            $"{model.Amount} € paid, total: {session.CurrentlyPaid} / {session.TotalPrice} €");
+        
         return new PaymentActualisationResponse(model.PaymentId, session.CurrentlyPaid);
     }
     
@@ -155,6 +163,20 @@ public class SessionService : ISessionService
         }
         
         return session.ToSessionResponse(await _bowlingParkApiService.GetFromQrCode(qrCode));
+    }
+
+    public Task SetAmountManually(string qrCode, PaymentManualRequest model)
+    {
+        var session = _context.Sessions
+            .FirstOrDefault(s => s.LocationQrCode == qrCode && s.ClosedAt == null)
+            ?? throw new AppException("Session not found", 404);
+        
+        if (session.ActuallyProcessingPayment)
+            throw new AppException("Payment is processing", 400);
+        
+        session.TotalPrice = model.Amount;
+        _context.Update(session);
+        return _context.SaveChangesAsync();
     }
 
     private async Task<float> ProcessPaymentPartType(string paymentPartType, float? amount, Session session, string userId)
